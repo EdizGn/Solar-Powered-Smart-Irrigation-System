@@ -1,16 +1,70 @@
-# React + Vite
+# Solar Smart Irrigation Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend web dashboard for a **Solar-Powered Smart Irrigation System** with weather integration and AI-assisted decision making.
 
-Currently, two official plugins are available:
+Developed as part of **CENG318 Microprocessors** course project (2025-2026 Spring Semester).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **Real-time sensor monitoring** - Soil moisture, temperature, humidity, rain detection, battery level, Wi-Fi status
+- **AI-based irrigation decisions** - Automatic recommendations based on sensor data and weather conditions
+- **Manual pump control** - Override automatic mode with ON/OFF buttons and session timer
+- **Water consumption reports** - Daily, weekly, and monthly charts with summary statistics
+- **Irrigation history** - Filterable and sortable log of past irrigation events
+- **Notification system** - Color-coded alerts with severity levels (info, success, warning, danger)
+- **System settings** - Configurable thresholds, timing, and notification preferences
+- **System health monitoring** - Component status overview, fault log, and safe mode detection
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- **React** (Vite) - UI framework with functional components and hooks
+- **Tailwind CSS** - Utility-first styling
+- **Recharts** - Charts and data visualization
+- **React Router** - Client-side routing
+- **Lucide React** - Icon library
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Getting Started
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+Default login credentials: `admin` / `admin123`
+
+## Project Structure
+
+```
+src/
+├── components/       # Reusable UI components
+│   ├── common/       # Card, StatusBadge
+│   ├── dashboard/    # Sensor cards, moisture chart
+│   ├── layout/       # Navbar, Sidebar, Layout
+│   ├── notifications/# NotificationBell
+│   └── reports/      # ConsumptionChart, ReportSummary
+├── context/          # AuthContext, SystemContext (global state)
+├── data/             # Mock data generators
+├── hooks/            # useSimulatedData, useAuth
+├── pages/            # All 8 page components
+└── utils/            # Helper functions
+```
+
+## Backend Integration
+
+This dashboard currently uses **mock data** with simulated real-time updates. All API touchpoints are marked with `// TODO: Replace with API call` comments for easy backend integration.
+
+Key integration points:
+- `src/context/SystemContext.jsx` - Central state management (swap mock state with API calls)
+- `src/hooks/useSimulatedData.js` - Remove and replace with WebSocket/SSE connections
+- `src/data/` - Mock data files to be replaced with API responses
+
+## Team
+
+- **UI/UX Dashboard** - Frontend development
+- **Backend/API** - Hardware integration and API development (Ediz)
