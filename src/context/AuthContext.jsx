@@ -3,24 +3,11 @@ import { createContext, useContext, useState, useCallback } from 'react'
 /**
  * AuthContext - Manages authentication state across the application.
  * Provides login, logout functions and current user info.
- * // TODO: Replace mock auth with JWT token-based authentication via API
  */
 const AuthContext = createContext(null)
 
-/** Mock user credentials for development */
-const MOCK_CREDENTIALS = {
-  username: 'admin',
-  password: 'admin123',
-}
-
-/**
- * AuthProvider - Wraps the app and provides authentication state.
- * @param {Object} props
- * @param {React.ReactNode} props.children - Child components
- */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    // Check localStorage for persisted session (remember me)
     const saved = localStorage.getItem('irrigation_user')
     return saved ? JSON.parse(saved) : null
   })
@@ -28,47 +15,50 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState(null)
 
   /**
-   * Attempt to log in with username and password.
-   * @param {string} username
-   * @param {string} password
-   * @param {boolean} rememberMe - Persist session in localStorage
-   * @returns {boolean} Whether login was successful
+   * Attempt to log in with username and password via Backend API.
    */
-  // TODO: Replace with API call to POST /api/auth/login
   const login = useCallback(async (username, password, rememberMe = false) => {
     setIsLoading(true)
     setError(null)
 
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    try {
+      // Senin yazdığın server.js portuna (3001) istek atıyoruz
+      const response = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
 
-    if (
-      username === MOCK_CREDENTIALS.username &&
-      password === MOCK_CREDENTIALS.password
-    ) {
-      const userData = {
-        id: 1,
-        username,
-        name: 'Admin User',
-        role: 'admin',
-        // TODO: Store JWT token here from API response
-        token: 'mock-jwt-token-xyz',
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Backend'den gelen kullanıcı bilgisini state'e kaydediyoruz
+        const userData = {
+          ...data.user,
+          // İleride JWT eklersen buraya data.token da gelecek
+          token: 'active-session-token'
+        };
+
+        setUser(userData);
+
+        if (rememberMe) {
+          localStorage.setItem('irrigation_user', JSON.stringify(userData));
+        }
+
+        setIsLoading(false);
+        return true;
+      } else {
+        setError(data.message || 'Giriş başarısız. Lütfen bilgileri kontrol edin.');
+        setIsLoading(false);
+        return false;
       }
-      setUser(userData)
-      if (rememberMe) {
-        localStorage.setItem('irrigation_user', JSON.stringify(userData))
-      }
-      setIsLoading(false)
-      return true
+    } catch (err) {
+      setError('Sunucuya bağlanılamadı. Backend çalışıyor mu?');
+      setIsLoading(false);
+      return false;
     }
-
-    setError('Invalid username or password')
-    setIsLoading(false)
-    return false
   }, [])
 
-  /** Log out the current user and clear persisted session. */
-  // TODO: Replace with API call to POST /api/auth/logout
   const logout = useCallback(() => {
     setUser(null)
     localStorage.removeItem('irrigation_user')
@@ -86,10 +76,6 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-/**
- * Hook to access auth context.
- * @returns {{ user: Object|null, isAuthenticated: boolean, isLoading: boolean, error: string|null, login: Function, logout: Function }}
- */
 export function useAuth() {
   const context = useContext(AuthContext)
   if (!context) {

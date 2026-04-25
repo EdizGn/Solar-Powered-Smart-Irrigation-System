@@ -32,7 +32,7 @@ export default function DashboardPage() {
   }, [])
 
   // Activate real-time data simulation
-  useSimulatedData()
+  //useSimulatedData()
 
   if (loading) {
     return (

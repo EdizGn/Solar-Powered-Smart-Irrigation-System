@@ -1,22 +1,46 @@
-import { useState, useMemo } from 'react'
-import { History, Filter, ArrowUpDown } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { History, Filter, ArrowUpDown, Loader2 } from 'lucide-react'
 import Card from '../components/common/Card'
 import StatusBadge from '../components/common/StatusBadge'
-import { generateIrrigationHistory } from '../data/mockHistory'
 import { formatDate } from '../utils/helpers'
 
 const TRIGGER_FILTERS = ['All', 'Automatic AI', 'Manual', 'Skipped (Rain)']
 
-/**
- * HistoryPage - Filterable, sortable table of past irrigation events.
- * Shows date, duration, trigger type, and moisture before/after.
- * // TODO: Replace generateIrrigationHistory with API call to GET /api/irrigation/history
- */
 export default function HistoryPage() {
-  const [history] = useState(() => generateIrrigationHistory(50))
+  // KRİTİK DÜZELTME: setHistory burada tanımlanmalıydı
+  const [history, setHistory] = useState([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('All')
   const [sortField, setSortField] = useState('date')
   const [sortAsc, setSortAsc] = useState(false)
+
+  // Neon Veritabanından verileri çekiyoruz
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/history');
+        const data = await response.json();
+
+        // Veritabanı sütun isimlerini frontend'in beklediği isimlere çeviriyoruz
+        const mapped = data.map(item => ({
+          id: item.id,
+          date: item.start_time,
+          duration: Math.round(item.duration_minutes),
+          trigger: item.trigger_type,
+          // Sayıları en yakın tamsayıya yuvarlıyoruz
+          moistureBefore: Math.round(item.moisture_before),
+          moistureAfter: Math.round(item.moisture_after)
+        }));
+
+        setHistory(mapped);
+        setLoading(false);
+      } catch (error) {
+        console.error("Geçmiş verisi çekilemedi:", error);
+        setLoading(false);
+      }
+    };
+    fetchHistory();
+  }, []);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -28,14 +52,13 @@ export default function HistoryPage() {
   }
 
   const filteredAndSorted = useMemo(() => {
+    if (!history) return [];
     let data = [...history]
 
-    // Filter
     if (filter !== 'All') {
       data = data.filter((e) => e.trigger === filter)
     }
 
-    // Sort
     data.sort((a, b) => {
       let valA, valB
       switch (sortField) {
@@ -47,17 +70,9 @@ export default function HistoryPage() {
           valA = a.duration
           valB = b.duration
           break
-        case 'moistureBefore':
-          valA = a.moistureBefore
-          valB = b.moistureBefore
-          break
-        case 'moistureAfter':
-          valA = a.moistureAfter
-          valB = b.moistureAfter
-          break
         default:
-          valA = new Date(a.date).getTime()
-          valB = new Date(b.date).getTime()
+          valA = a.id
+          valB = b.id
       }
       return sortAsc ? valA - valB : valB - valA
     })
@@ -72,6 +87,16 @@ export default function HistoryPage() {
       case 'Skipped (Rain)': return 'neutral'
       default: return 'neutral'
     }
+  }
+
+  // Yükleme ekranı ekledik ki beyaz ekran yerine kullanıcı bir şey görsün
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        <p className="text-sm text-gray-400">Sulama geçmişi yükleniyor...</p>
+      </div>
+    )
   }
 
   const SortHeader = ({ field, children }) => (
@@ -94,19 +119,14 @@ export default function HistoryPage() {
           <h2 className="text-xl font-semibold text-gray-900">Irrigation History</h2>
         </div>
 
-        {/* Filter */}
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-400" />
           <div className="flex bg-gray-100 rounded-lg p-1">
             {TRIGGER_FILTERS.map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
-                  filter === f
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${filter === f ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'
+                  }`}
               >
                 {f}
               </button>
@@ -122,9 +142,7 @@ export default function HistoryPage() {
               <tr>
                 <SortHeader field="date">Date & Time</SortHeader>
                 <SortHeader field="duration">Duration</SortHeader>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Trigger
-                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Trigger</th>
                 <SortHeader field="moistureBefore">Before</SortHeader>
                 <SortHeader field="moistureAfter">After</SortHeader>
               </tr>
@@ -132,40 +150,20 @@ export default function HistoryPage() {
             <tbody className="divide-y divide-gray-50">
               {filteredAndSorted.map((event) => (
                 <tr key={event.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {formatDate(event.date)}
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium text-gray-800">
-                    {event.duration > 0 ? `${event.duration} min` : '-'}
-                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{formatDate(event.date)}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-gray-800">{event.duration} min</td>
                   <td className="px-4 py-3">
                     <StatusBadge label={event.trigger} variant={getTriggerVariant(event.trigger)} />
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {event.moistureBefore}%
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {event.moistureAfter}%
-                    {event.moistureAfter > event.moistureBefore && (
-                      <span className="text-green-500 text-xs ml-1">
-                        +{event.moistureAfter - event.moistureBefore}%
-                      </span>
-                    )}
-                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{event.moistureBefore}%</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">{event.moistureAfter}%</td>
                 </tr>
               ))}
             </tbody>
           </table>
-
           {filteredAndSorted.length === 0 && (
-            <div className="text-center py-12 text-gray-400">
-              No irrigation events found for this filter.
-            </div>
+            <div className="text-center py-12 text-gray-400">Kayıt bulunamadı.</div>
           )}
-        </div>
-
-        <div className="mt-4 pt-3 border-t border-gray-100 text-xs text-gray-400">
-          Showing {filteredAndSorted.length} of {history.length} events
         </div>
       </Card>
     </div>

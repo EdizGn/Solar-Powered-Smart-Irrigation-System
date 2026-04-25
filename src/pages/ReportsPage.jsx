@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { BarChart3 } from 'lucide-react'
 import ConsumptionChart from '../components/reports/ConsumptionChart'
 import ReportSummary from '../components/reports/ReportSummary'
@@ -18,18 +18,24 @@ const PERIODS = ['Daily', 'Weekly', 'Monthly']
  */
 export default function ReportsPage() {
   const [period, setPeriod] = useState('Daily')
+  const [data, setData] = useState([]) // Sahte veri yerine state kullanıyoruz
+  const [loading, setLoading] = useState(true)
 
-  // Generate data based on selected period
-  const data = useMemo(() => {
-    switch (period) {
-      case 'Weekly':
-        return generateWeeklyData(12)
-      case 'Monthly':
-        return generateMonthlyData(6)
-      default:
-        return generateDailyData(30)
-    }
-  }, [period])
+  useEffect(() => {
+    const fetchReportData = async () => {
+      setLoading(true)
+      try {
+        const response = await fetch(`http://localhost:3001/api/reports?period=${period}`);
+        const result = await response.json();
+        setData(result);
+        setLoading(false);
+      } catch (error) {
+        console.error("Rapor verisi alınamadı:", error);
+        setLoading(false);
+      }
+    };
+    fetchReportData();
+  }, [period]);
 
   const summary = useMemo(() => calculateSummary(data), [data])
 
@@ -49,11 +55,10 @@ export default function ReportsPage() {
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${
-                period === p
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${period === p
                   ? 'bg-white text-blue-600 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
             >
               {p}
             </button>
