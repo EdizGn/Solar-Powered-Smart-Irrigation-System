@@ -21,11 +21,8 @@ const DEFAULT_SENSORS = {
 
 /** Default system settings */
 const DEFAULT_SETTINGS = {
-  moistureThresholdLow: 30,
-  moistureThresholdHigh: 80,
-  rainProbabilityThreshold: 50,
+  plantType: 'tomato',
   pushNotifications: true,
-  emailNotifications: false,
   deepSleepInterval: 15,
   maxPumpRuntime: 20,
 }

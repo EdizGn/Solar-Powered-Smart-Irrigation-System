@@ -1,10 +1,21 @@
 import { useState } from 'react'
-import { Settings, Save, RotateCcw } from 'lucide-react'
+import { Settings, Save, RotateCcw, Leaf } from 'lucide-react'
 import Card from '../components/common/Card'
 import { useSystem } from '../context/SystemContext'
 
+const PLANT_OPTIONS = [
+  { value: 'tomato', label: 'Domates' },
+  { value: 'pepper', label: 'Biber' },
+  { value: 'cucumber', label: 'Salatalık' },
+  { value: 'eggplant', label: 'Patlıcan' },
+  { value: 'lettuce', label: 'Marul' },
+  { value: 'strawberry', label: 'Çilek' },
+  { value: 'grass', label: 'Çim' },
+  { value: 'other', label: 'Diğer' },
+]
+
 /**
- * SettingsPage - System configuration panel with threshold sliders,
+ * SettingsPage - System configuration panel with plant type,
  * notification preferences, and timing settings.
  * // TODO: Replace updateSettings with API call to PUT /api/settings
  */
@@ -38,73 +49,28 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Irrigation Thresholds */}
+        {/* Plant Type */}
         <Card>
-          <h3 className="text-sm font-medium text-gray-800 mb-5">Irrigation Thresholds</h3>
-
-          <div className="space-y-6">
-            {/* Moisture threshold low */}
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="text-sm text-gray-600">Moisture Low Threshold</label>
-                <span className="text-sm font-semibold text-blue-600">{localSettings.moistureThresholdLow}%</span>
-              </div>
-              <input
-                type="range"
-                min={10}
-                max={60}
-                value={localSettings.moistureThresholdLow}
-                onChange={(e) => handleChange('moistureThresholdLow', Number(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>10%</span>
-                <span>60%</span>
-              </div>
+          <h3 className="text-sm font-medium text-gray-800 mb-5">Plant Type</h3>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <Leaf className="w-4 h-4 text-green-500" />
+              <label className="text-sm text-gray-600">Select the plant being irrigated</label>
             </div>
-
-            {/* Moisture threshold high */}
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="text-sm text-gray-600">Moisture High Threshold</label>
-                <span className="text-sm font-semibold text-blue-600">{localSettings.moistureThresholdHigh}%</span>
-              </div>
-              <input
-                type="range"
-                min={50}
-                max={95}
-                value={localSettings.moistureThresholdHigh}
-                onChange={(e) => handleChange('moistureThresholdHigh', Number(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>50%</span>
-                <span>95%</span>
-              </div>
-            </div>
-
-            {/* Rain probability threshold */}
-            <div>
-              <div className="flex justify-between mb-2">
-                <label className="text-sm text-gray-600">Rain Probability Threshold</label>
-                <span className="text-sm font-semibold text-amber-600">{localSettings.rainProbabilityThreshold}%</span>
-              </div>
-              <input
-                type="range"
-                min={20}
-                max={90}
-                value={localSettings.rainProbabilityThreshold}
-                onChange={(e) => handleChange('rainProbabilityThreshold', Number(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
-              />
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>20%</span>
-                <span>90%</span>
-              </div>
-              <p className="text-xs text-gray-400 mt-1">
-                Irrigation will be postponed when rain probability exceeds this value.
-              </p>
-            </div>
+            <select
+              value={localSettings.plantType}
+              onChange={(e) => handleChange('plantType', e.target.value)}
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition-all cursor-pointer"
+            >
+              {PLANT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-400">
+              Used by the AI decision algorithm to optimize irrigation.
+            </p>
           </div>
         </Card>
 
@@ -188,25 +154,6 @@ export default function SettingsPage() {
               </div>
             </label>
 
-            {/* Email notifications toggle */}
-            <label className="flex items-center gap-3 cursor-pointer">
-              <div
-                className={`relative w-11 h-6 rounded-full transition-colors ${
-                  localSettings.emailNotifications ? 'bg-blue-500' : 'bg-gray-300'
-                }`}
-                onClick={() => handleChange('emailNotifications', !localSettings.emailNotifications)}
-              >
-                <div
-                  className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                    localSettings.emailNotifications ? 'translate-x-5.5' : 'translate-x-0.5'
-                  }`}
-                />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Email Notifications</p>
-                <p className="text-xs text-gray-400">Receive email alerts for critical events</p>
-              </div>
-            </label>
           </div>
         </Card>
       </div>
