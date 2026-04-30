@@ -36,3 +36,10 @@ Login: `admin` / `admin123`
 ## Note
 
 Currently uses mock data. Ready for backend integration — all API touchpoints are marked with `// TODO: Replace with API call` comments.
+
+## CI/CD and Branch Protection (TDR §17.3)
+
+GitHub repository üzerinde `main` branch için aşağıdaki branch protection (koruma) kurallarının manuel olarak aktifleştirilmesi gereklidir:
+- **Require pull request reviews before merging**: En az 1 onay (approving review)
+- **Require status checks to pass before merging**: `build-and-lint` action'ının (frontend-ci.yml) başarılı olması zorunlu
+- **Do not allow bypassing the above settings**: Yöneticiler dahil kimse doğrudan `main`'e push atamaz.

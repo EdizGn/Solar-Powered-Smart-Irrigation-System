@@ -1,13 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { BarChart3 } from 'lucide-react'
 import ConsumptionChart from '../components/reports/ConsumptionChart'
 import ReportSummary from '../components/reports/ReportSummary'
-import {
-  generateDailyData,
-  generateWeeklyData,
-  generateMonthlyData,
-  calculateSummary,
-} from '../data/mockReports'
 
 const PERIODS = ['Daily', 'Weekly', 'Monthly']
 
@@ -20,18 +14,10 @@ export default function ReportsPage() {
   const [period, setPeriod] = useState('Daily')
 
   // Generate data based on selected period
-  const data = useMemo(() => {
-    switch (period) {
-      case 'Weekly':
-        return generateWeeklyData(12)
-      case 'Monthly':
-        return generateMonthlyData(6)
-      default:
-        return generateDailyData(30)
-    }
-  }, [period])
+  // TODO: Replace with API response using `period` state
+  const data = []
 
-  const summary = useMemo(() => calculateSummary(data), [data])
+  const summary = { total: 0, average: 0, highest: 0 }
 
   return (
     <div>

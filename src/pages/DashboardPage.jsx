@@ -8,7 +8,6 @@ import WifiStatusCard from '../components/dashboard/WifiStatusCard'
 import WeatherCard from '../components/dashboard/WeatherCard'
 import AiDecisionCard from '../components/dashboard/AiDecisionCard'
 import MoistureChart from '../components/dashboard/MoistureChart'
-import { useSimulatedData } from '../hooks/useSimulatedData'
 import { useSystem } from '../context/SystemContext'
 import { WS_STATUS } from '../hooks/useWebSocket'
 
@@ -18,9 +17,6 @@ import { WS_STATUS } from '../hooks/useWebSocket'
  * Data source strategy:
  *  - When VITE_WS_URL is set and the backend is reachable, all sensor cards
  *    update via SystemContext which is driven by the /ws/live WebSocket.
- *  - When VITE_WS_URL is empty (dev / no backend), useSimulatedData() drives
- *    mock updates so the UI remains interactive during development.
- *    A "Simulated Data" banner is shown to make this obvious.
  *  - When VITE_WS_URL is set but the connection is lost, a "Reconnecting"
  *    banner is shown and the last known values remain on screen.
  */
@@ -34,15 +30,9 @@ export default function DashboardPage() {
   const [initialLoading, setInitialLoading] = useState(true)
   useEffect(() => {
     // In live mode: wait for first WS connection or a short timeout
-    // In mock mode: simulate a brief load delay for UX realism
-    const timer = setTimeout(() => setInitialLoading(false), wsConfigured ? 2000 : 1200)
+    const timer = setTimeout(() => setInitialLoading(false), wsConfigured ? 2000 : 0)
     return () => clearTimeout(timer)
   }, [wsConfigured])
-
-  // Activate mock data simulation ONLY when no live WebSocket is available.
-  // Once the WS connects and isLiveMode becomes true, simulated data becomes
-  // a no-op because real sensor.update events overwrite state immediately.
-  useSimulatedData()
 
   // ── Loading screen ──────────────────────────────────────────────────────
   if (initialLoading) {
@@ -59,7 +49,6 @@ export default function DashboardPage() {
   // ── Compute banner state ────────────────────────────────────────────────
   const isReconnecting = wsConfigured &&
     (wsStatus === WS_STATUS.RECONNECTING || wsStatus === WS_STATUS.CONNECTING)
-  const isSimulated    = !wsConfigured || (!isLiveMode && !isReconnecting)
 
   return (
     <div>
@@ -86,14 +75,14 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Simulated data banner */}
-      {isSimulated && !isReconnecting && (
-        <div className="flex items-center gap-2 px-4 py-2.5 mb-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm">
+      {/* Configuration warning banner */}
+      {!wsConfigured && (
+        <div className="flex items-center gap-2 px-4 py-2.5 mb-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>
-            <strong>Simulated data</strong> — set{' '}
-            <code className="font-mono text-xs bg-blue-100 px-1 rounded">VITE_WS_URL</code>{' '}
-            in <code className="font-mono text-xs bg-blue-100 px-1 rounded">.env</code>{' '}
+            <strong>Missing configuration</strong> — set{' '}
+            <code className="font-mono text-xs bg-red-100 px-1 rounded">VITE_WS_URL</code>{' '}
+            in <code className="font-mono text-xs bg-red-100 px-1 rounded">.env</code>{' '}
             to connect to the real sensor network.
           </span>
         </div>

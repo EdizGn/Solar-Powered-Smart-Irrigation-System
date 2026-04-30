@@ -12,7 +12,6 @@ import {
 import { TrendingUp } from 'lucide-react'
 import Card from '../common/Card'
 import { useSystem } from '../../context/SystemContext'
-import { generateMoistureHistory } from '../../data/mockSensorData'
 
 /**
  * MoistureChart - Real-time line chart showing soil moisture over the last 24 hours.
@@ -22,7 +21,7 @@ import { generateMoistureHistory } from '../../data/mockSensorData'
  */
 export default function MoistureChart() {
   const { sensors, settings } = useSystem()
-  const [data, setData] = useState(() => generateMoistureHistory())
+  const [data, setData] = useState([])
   const intervalRef = useRef(null)
 
   // Append new data point every 5 seconds

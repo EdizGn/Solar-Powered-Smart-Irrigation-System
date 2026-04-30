@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { History, Filter, ArrowUpDown } from 'lucide-react'
 import Card from '../components/common/Card'
 import StatusBadge from '../components/common/StatusBadge'
-import { generateIrrigationHistory } from '../data/mockHistory'
+import { useSystem } from '../context/SystemContext'
 import { formatDate } from '../utils/helpers'
 
 const TRIGGER_FILTERS = ['All', 'Automatic AI', 'Manual', 'Skipped (Rain)']
@@ -33,7 +33,7 @@ function SortHeader({ field, sortField, onSort, children }) {
  * // TODO: Replace generateIrrigationHistory with API call to GET /api/irrigation/history
  */
 export default function HistoryPage() {
-  const [history] = useState(() => generateIrrigationHistory(50))
+  const { irrigationHistory } = useSystem()
   const [filter, setFilter] = useState('All')
   const [sortField, setSortField] = useState('date')
   const [sortAsc, setSortAsc] = useState(false)
@@ -48,7 +48,7 @@ export default function HistoryPage() {
   }
 
   const filteredAndSorted = useMemo(() => {
-    let data = [...history]
+    let data = [...irrigationHistory]
 
     // Filter
     if (filter !== 'All') {
@@ -83,7 +83,7 @@ export default function HistoryPage() {
     })
 
     return data
-  }, [history, filter, sortField, sortAsc])
+  }, [irrigationHistory, filter, sortField, sortAsc])
 
   const getTriggerVariant = (trigger) => {
     switch (trigger) {
