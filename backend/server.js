@@ -211,5 +211,53 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// 3. ESP32'den Veri Alma Rotası (Donanım Entegrasyonu)
+app.post('/api/sensors/data', async (req, res) => {
+    const { moisture, temperature, humidity, rain_probability, is_raining, battery_voltage, battery_level } = req.body;
+
+    try {
+        const now = new Date();
+        
+        // 1. Sensör verisini kaydet
+        await pool.query(
+            `INSERT INTO sensor_logs 
+            (soil_moisture, temperature, humidity, rain_probability, is_raining, battery_voltage, battery_level, wifi_connected, recorded_at) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            [moisture, temperature, humidity, rain_probability, is_raining, battery_voltage, battery_level, true, now]
+        );
+
+        // 2. Karar Mekanizması
+        const settingsRes = await pool.query("SELECT moisture_threshold_low FROM system_settings WHERE id=1");
+        const threshold = settingsRes.rows[0]?.moisture_threshold_low || 35;
+
+        let action = "SKIP";
+        let duration = 0;
+
+        if (moisture < threshold && !is_raining) {
+            action = "IRRIGATE";
+            duration = 15; // Dakika cinsinden kayıt
+            
+            // Sulama kaydı ve bildirim oluştur
+            await pool.query(
+                `INSERT INTO irrigation_history (start_time, duration_minutes, trigger_type, moisture_before, moisture_after, liters_consumed) 
+                 VALUES ($1, $2, $3, $4, $5, $6)`,
+                [now, duration, 'Automatic ESP32', moisture, moisture + 20, 12.5]
+            );
+            await pool.query(
+                `INSERT INTO notifications (type, title, message, read, timestamp) 
+                 VALUES ('info', 'Otomatik Sulama', 'Nem %' || $1 || ' olduğu için sistem devreye girdi.', false, $2)`,
+                [Math.round(moisture), now]
+            );
+        }
+
+        // ESP32'ye cevabı dön
+        res.json({ success: true, action: action, duration: duration });
+
+    } catch (err) {
+        console.error("❌ ESP32 Veri Alma Hatası:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Backend ${PORT} portunda canlı!`));
