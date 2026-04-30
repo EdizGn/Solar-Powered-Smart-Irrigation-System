@@ -8,6 +8,26 @@ import { formatDate } from '../utils/helpers'
 const TRIGGER_FILTERS = ['All', 'Automatic AI', 'Manual', 'Skipped (Rain)']
 
 /**
+ * SortHeader - Table header cell with sort toggle.
+ * Defined at module level to avoid re-creation on every render.
+ */
+function SortHeader({ field, sortField, onSort, children }) {
+  return (
+    <th
+      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
+      onClick={() => onSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        <ArrowUpDown className={`w-3 h-3 ${sortField === field ? 'text-blue-500' : 'text-gray-300'}`} />
+      </div>
+    </th>
+  )
+}
+
+
+
+/**
  * HistoryPage - Filterable, sortable table of past irrigation events.
  * Shows date, duration, trigger type, and moisture before/after.
  * // TODO: Replace generateIrrigationHistory with API call to GET /api/irrigation/history
@@ -74,17 +94,7 @@ export default function HistoryPage() {
     }
   }
 
-  const SortHeader = ({ field, children }) => (
-    <th
-      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 select-none"
-      onClick={() => handleSort(field)}
-    >
-      <div className="flex items-center gap-1">
-        {children}
-        <ArrowUpDown className={`w-3 h-3 ${sortField === field ? 'text-blue-500' : 'text-gray-300'}`} />
-      </div>
-    </th>
-  )
+
 
   return (
     <div>
@@ -120,13 +130,13 @@ export default function HistoryPage() {
           <table className="w-full">
             <thead className="border-b border-gray-100">
               <tr>
-                <SortHeader field="date">Date & Time</SortHeader>
-                <SortHeader field="duration">Duration</SortHeader>
+                <SortHeader field="date" sortField={sortField} onSort={handleSort}>Date &amp; Time</SortHeader>
+                <SortHeader field="duration" sortField={sortField} onSort={handleSort}>Duration</SortHeader>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Trigger
                 </th>
-                <SortHeader field="moistureBefore">Before</SortHeader>
-                <SortHeader field="moistureAfter">After</SortHeader>
+                <SortHeader field="moistureBefore" sortField={sortField} onSort={handleSort}>Before</SortHeader>
+                <SortHeader field="moistureAfter" sortField={sortField} onSort={handleSort}>After</SortHeader>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">

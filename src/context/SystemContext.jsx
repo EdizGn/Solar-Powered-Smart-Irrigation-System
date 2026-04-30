@@ -173,6 +173,7 @@ export function SystemProvider({ children }) {
  * Hook to access system context.
  * @returns {Object} System state and actions
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useSystem() {
   const context = useContext(SystemContext)
   if (!context) {

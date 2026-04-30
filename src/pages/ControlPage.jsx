@@ -14,12 +14,9 @@ export default function ControlPage() {
   const { pumpStatus, controlMode, manualStartTime, togglePump, sensors } = useSystem()
   const [elapsed, setElapsed] = useState(0)
 
-  // Timer for manual mode duration
+  // Timer for manual mode duration — tick every second to refresh displayElapsed
   useEffect(() => {
-    if (controlMode !== 'manual' || !manualStartTime) {
-      setElapsed(0)
-      return
-    }
+    if (controlMode !== 'manual' || !manualStartTime) return
 
     const tick = setInterval(() => {
       setElapsed(Math.floor((Date.now() - manualStartTime) / 1000))
@@ -27,6 +24,12 @@ export default function ControlPage() {
 
     return () => clearInterval(tick)
   }, [controlMode, manualStartTime])
+
+  // Derive current display value without calling setState in the effect body
+  const displayElapsed =
+    controlMode === 'manual' && manualStartTime
+      ? elapsed
+      : 0
 
   const formatElapsed = (seconds) => {
     const m = Math.floor(seconds / 60)
@@ -125,7 +128,7 @@ export default function ControlPage() {
               <div>
                 <p className="text-sm text-gray-500">Manual Mode Active</p>
                 <p className="text-2xl font-mono font-bold text-amber-600">
-                  {formatElapsed(elapsed)}
+                  {formatElapsed(displayElapsed)}
                 </p>
               </div>
             </div>

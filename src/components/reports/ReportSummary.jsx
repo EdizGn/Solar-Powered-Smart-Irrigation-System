@@ -41,6 +41,7 @@ export default function ReportSummary({ summary }) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* eslint-disable-next-line no-unused-vars */}
       {stats.map(({ icon: Icon, label, value, subtext, color, bgColor }) => (
         <Card key={label} hover>
           <div className="flex items-center gap-3">

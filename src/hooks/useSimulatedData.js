@@ -21,7 +21,9 @@ export function useSimulatedData() {
     addNotification,
   } = useSystem()
 
-  const lastNotificationRef = useRef(Date.now())
+  // Initialize to null; actual timestamp is set in the first useEffect to avoid
+  // calling Date.now() during render (react-hooks/purity rule).
+  const lastNotificationRef = useRef(null)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -103,6 +105,11 @@ export function useSimulatedData() {
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now()
+      // Initialize on first tick if null
+      if (lastNotificationRef.current === null) {
+        lastNotificationRef.current = now
+        return
+      }
       if (now - lastNotificationRef.current < 30000) return
       lastNotificationRef.current = now
 

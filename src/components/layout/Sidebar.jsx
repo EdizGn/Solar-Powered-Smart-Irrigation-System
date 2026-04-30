@@ -59,6 +59,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* Navigation links */}
         <nav className="mt-4 px-3 space-y-1">
+          {/* eslint-disable-next-line no-unused-vars */}
           {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}

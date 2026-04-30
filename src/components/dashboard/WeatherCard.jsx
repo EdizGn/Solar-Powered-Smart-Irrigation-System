@@ -48,6 +48,7 @@ export default function WeatherCard() {
       </div>
 
       <div className="space-y-3">
+        {/* eslint-disable-next-line no-unused-vars */}
         {stats.map(({ icon: Icon, label, value, unit, color, bgColor }) => (
           <div key={label} className="flex items-center justify-between">
             <div className="flex items-center gap-2">

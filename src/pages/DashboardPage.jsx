@@ -20,7 +20,7 @@ import { useSimulatedData } from '../hooks/useSimulatedData'
 export default function DashboardPage() {
   // TODO: Replace with real loading/error state from API calls
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error] = useState(null)
 
   // Simulate initial data fetch
   useEffect(() => {

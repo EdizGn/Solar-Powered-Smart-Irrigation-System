@@ -42,7 +42,7 @@ const HEALTH_CONFIG = {
  * // TODO: Replace with real system status from API GET /api/system/status
  */
 export default function SystemStatusPage() {
-  const { systemHealth, setSystemHealth, componentStatus, setComponentStatus, faultLog, setFaultLog, sensors } = useSystem()
+  const { systemHealth, setSystemHealth, componentStatus, setComponentStatus, sensors } = useSystem()
   const [mockFaultLog] = useState(() => generateMockFaultLog())
 
   // Simulate system health based on sensors
@@ -113,6 +113,7 @@ export default function SystemStatusPage() {
       {/* Component Status Grid */}
       <h3 className="text-sm font-medium text-gray-600 mb-3">Component Status</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        {/* eslint-disable-next-line no-unused-vars */}
         {COMPONENTS.map(({ key, label, icon: Icon, onLabel, offLabel }) => {
           const ok = isComponentOk(key)
           return (
