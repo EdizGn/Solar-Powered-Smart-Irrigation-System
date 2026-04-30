@@ -3,13 +3,14 @@ import { useSystem } from '../context/SystemContext'
 import { clamp } from '../utils/helpers'
 
 /**
- * useSimulatedData - Custom hook that simulates real-time sensor data updates.
- * Updates soil moisture, temperature, humidity, rain probability, and battery level
- * at regular intervals using setInterval.
- * Also updates AI decision based on current sensor readings and settings.
+ * useSimulatedData - Simulates real-time sensor data during development.
  *
- * // TODO: Remove this hook entirely when real WebSocket/API data is connected.
- * // The SystemContext setSensors/setAiDecision should be called from the API layer instead.
+ * This hook is a dev-only mock. It is automatically disabled (becomes a
+ * complete no-op) once the WebSocket connection to the backend is established
+ * (isLiveMode = true), so simulated values never overwrite real sensor data.
+ *
+ * TODO: Remove this hook and all imports once VITE_WS_URL is set and the
+ *       backend is live. Also delete the src/data/ directory.
  */
 export function useSimulatedData() {
   const {
@@ -19,6 +20,7 @@ export function useSimulatedData() {
     settings,
     setAiDecision,
     addNotification,
+    isLiveMode,
   } = useSystem()
 
   // Initialize to null; actual timestamp is set in the first useEffect to avoid
@@ -26,6 +28,9 @@ export function useSimulatedData() {
   const lastNotificationRef = useRef(null)
 
   useEffect(() => {
+    // No-op when the real WebSocket is connected
+    if (isLiveMode) return
+
     const interval = setInterval(() => {
       setSensors((prev) => {
         // Soil moisture: fluctuate between 25-85%, drift down slightly if pump is off
@@ -71,10 +76,12 @@ export function useSimulatedData() {
     }, 5000) // Update every 5 seconds
 
     return () => clearInterval(interval)
-  }, [pumpStatus, setSensors])
+  }, [isLiveMode, pumpStatus, setSensors])
 
   // Update AI decision based on current sensor state
   useEffect(() => {
+    if (isLiveMode) return   // real decisions come from decision.new WS events
+
     const { soilMoisture, rainProbability, batteryLevel, isRaining } = sensors
     const { moistureThresholdLow, rainProbabilityThreshold } = settings
 
@@ -99,10 +106,12 @@ export function useSimulatedData() {
     }
 
     setAiDecision({ action, message, irrigationMinutes })
-  }, [sensors, settings, setAiDecision])
+  }, [isLiveMode, sensors, settings, setAiDecision])
 
   // Periodic notifications (every 30 seconds add a simulated notification)
   useEffect(() => {
+    if (isLiveMode) return   // real notifications come from the backend
+
     const interval = setInterval(() => {
       const now = Date.now()
       // Initialize on first tick if null
@@ -144,5 +153,5 @@ export function useSimulatedData() {
     }, 30000)
 
     return () => clearInterval(interval)
-  }, [sensors, addNotification])
+  }, [isLiveMode, sensors, addNotification])
 }

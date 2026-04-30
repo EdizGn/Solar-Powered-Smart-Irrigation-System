@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { Loader2, AlertCircle, WifiOff, Radio } from 'lucide-react'
 import MoistureCard from '../components/dashboard/MoistureCard'
 import PumpStatusCard from '../components/dashboard/PumpStatusCard'
 import RainStatusCard from '../components/dashboard/RainStatusCard'
@@ -9,59 +9,95 @@ import WeatherCard from '../components/dashboard/WeatherCard'
 import AiDecisionCard from '../components/dashboard/AiDecisionCard'
 import MoistureChart from '../components/dashboard/MoistureChart'
 import { useSimulatedData } from '../hooks/useSimulatedData'
+import { useSystem } from '../context/SystemContext'
+import { WS_STATUS } from '../hooks/useWebSocket'
 
 /**
- * DashboardPage - Main dashboard with real-time sensor overview.
- * Displays card-based layout of all sensor readings, AI decision,
- * and a real-time moisture line chart.
- * Includes loading and error states for production readiness.
- * The useSimulatedData hook drives mock data updates every 5 seconds.
+ * DashboardPage - Main dashboard with real-time sensor overview (TDR §8.2).
+ *
+ * Data source strategy:
+ *  - When VITE_WS_URL is set and the backend is reachable, all sensor cards
+ *    update via SystemContext which is driven by the /ws/live WebSocket.
+ *  - When VITE_WS_URL is empty (dev / no backend), useSimulatedData() drives
+ *    mock updates so the UI remains interactive during development.
+ *    A "Simulated Data" banner is shown to make this obvious.
+ *  - When VITE_WS_URL is set but the connection is lost, a "Reconnecting"
+ *    banner is shown and the last known values remain on screen.
  */
 export default function DashboardPage() {
-  // TODO: Replace with real loading/error state from API calls
-  const [loading, setLoading] = useState(true)
-  const [error] = useState(null)
+  const { wsStatus, isLiveMode } = useSystem()
 
-  // Simulate initial data fetch
+  // Determine whether we have a configured WebSocket endpoint
+  const wsConfigured = !!import.meta.env.VITE_WS_URL
+
+  // Show spinner only on initial page load (not on every reconnect)
+  const [initialLoading, setInitialLoading] = useState(true)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false)
-      // setError('Failed to connect to sensor network') // Uncomment to test error state
-    }, 1200)
+    // In live mode: wait for first WS connection or a short timeout
+    // In mock mode: simulate a brief load delay for UX realism
+    const timer = setTimeout(() => setInitialLoading(false), wsConfigured ? 2000 : 1200)
     return () => clearTimeout(timer)
-  }, [])
+  }, [wsConfigured])
 
-  // Activate real-time data simulation
+  // Activate mock data simulation ONLY when no live WebSocket is available.
+  // Once the WS connects and isLiveMode becomes true, simulated data becomes
+  // a no-op because real sensor.update events overwrite state immediately.
   useSimulatedData()
 
-  if (loading) {
+  // ── Loading screen ──────────────────────────────────────────────────────
+  if (initialLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-        <p className="text-sm text-gray-500">Loading sensor data...</p>
+        <p className="text-sm text-gray-500">
+          {wsConfigured ? 'Connecting to sensor network…' : 'Loading sensor data…'}
+        </p>
       </div>
     )
   }
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <AlertCircle className="w-8 h-8 text-red-500" />
-        <p className="text-sm text-red-600 font-medium">Something went wrong</p>
-        <p className="text-xs text-gray-400">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-2 px-4 py-1.5 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors"
-        >
-          Retry
-        </button>
-      </div>
-    )
-  }
+  // ── Compute banner state ────────────────────────────────────────────────
+  const isReconnecting = wsConfigured &&
+    (wsStatus === WS_STATUS.RECONNECTING || wsStatus === WS_STATUS.CONNECTING)
+  const isSimulated    = !wsConfigured || (!isLiveMode && !isReconnecting)
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Dashboard</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold text-gray-900">Dashboard</h2>
+
+        {/* Connection status pill */}
+        {isLiveMode && wsStatus === WS_STATUS.CONNECTED && (
+          <span className="flex items-center gap-1.5 text-xs font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+            <Radio className="w-3 h-3" />
+            Live
+          </span>
+        )}
+      </div>
+
+      {/* Reconnecting banner (TDR §8.8 — user must never be confused about offline mode) */}
+      {isReconnecting && (
+        <div className="flex items-center gap-2 px-4 py-2.5 mb-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+          <WifiOff className="w-4 h-4 shrink-0" />
+          <span>
+            <strong>Reconnecting to sensor network…</strong> — AI decisions may be
+            terser until the connection is restored.
+          </span>
+        </div>
+      )}
+
+      {/* Simulated data banner */}
+      {isSimulated && !isReconnecting && (
+        <div className="flex items-center gap-2 px-4 py-2.5 mb-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-sm">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>
+            <strong>Simulated data</strong> — set{' '}
+            <code className="font-mono text-xs bg-blue-100 px-1 rounded">VITE_WS_URL</code>{' '}
+            in <code className="font-mono text-xs bg-blue-100 px-1 rounded">.env</code>{' '}
+            to connect to the real sensor network.
+          </span>
+        </div>
+      )}
 
       {/* Sensor cards grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
