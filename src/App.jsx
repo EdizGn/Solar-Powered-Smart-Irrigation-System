@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAuth } from './context/AuthContext'
+import ProtectedRoute from './components/common/ProtectedRoute'
 import Layout from './components/layout/Layout'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
@@ -11,21 +11,21 @@ import SettingsPage from './pages/SettingsPage'
 import SystemStatusPage from './pages/SystemStatusPage'
 
 /**
- * ProtectedRoute - Wrapper that redirects to login if not authenticated.
- * @param {Object} props
- * @param {React.ReactNode} props.children
- */
-function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useAuth()
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
-  return children
-}
-
-/**
  * App - Root component with route definitions.
- * All dashboard routes are protected behind authentication.
+ *
+ * Route structure (TDR §8.2):
+ *  /login         → LoginPage     (public)
+ *  /              → DashboardPage (protected)
+ *  /control       → ControlPage   (protected)
+ *  /reports       → ReportsPage   (protected)
+ *  /history       → HistoryPage   (protected)
+ *  /notifications → NotificationsPage (protected)
+ *  /settings      → SettingsPage  (protected)
+ *  /system        → SystemStatusPage  (protected)
+ *  *              → redirect to /
+ *
+ * All protected routes are wrapped in a single ProtectedRoute + Layout pair
+ * so auth checking and the shell UI are applied consistently.
  */
 export default function App() {
   return (
@@ -33,7 +33,7 @@ export default function App() {
       {/* Public route */}
       <Route path="/login" element={<LoginPage />} />
 
-      {/* Protected routes wrapped in Layout */}
+      {/* Protected routes — auth check + common shell layout */}
       <Route
         element={
           <ProtectedRoute>
@@ -50,7 +50,7 @@ export default function App() {
         <Route path="/system" element={<SystemStatusPage />} />
       </Route>
 
-      {/* Catch-all redirect */}
+      {/* Catch-all — unknown paths go to dashboard (which may redirect to login) */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
