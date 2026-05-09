@@ -8,7 +8,6 @@ import ReportsPage from './pages/ReportsPage'
 import HistoryPage from './pages/HistoryPage'
 import NotificationsPage from './pages/NotificationsPage'
 import SettingsPage from './pages/SettingsPage'
-import SystemStatusPage from './pages/SystemStatusPage'
 
 /**
  * ProtectedRoute - Wrapper that redirects to login if not authenticated.
@@ -47,7 +46,6 @@ export default function App() {
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/system" element={<SystemStatusPage />} />
       </Route>
 
       {/* Catch-all redirect */}

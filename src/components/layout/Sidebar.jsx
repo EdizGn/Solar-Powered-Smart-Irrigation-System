@@ -6,7 +6,6 @@ import {
   History,
   Bell,
   Settings,
-  Activity,
   Droplets,
 } from 'lucide-react'
 
@@ -21,7 +20,6 @@ const NAV_ITEMS = [
   { to: '/history', icon: History, label: 'History' },
   { to: '/notifications', icon: Bell, label: 'Notifications' },
   { to: '/settings', icon: Settings, label: 'Settings' },
-  { to: '/system', icon: Activity, label: 'System Status' },
 ]
 
 /**

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'irrigation-v1';
+const CACHE_NAME = 'irrigation-v2';
 const STATIC_ASSETS = [
   '/',
   '/favicon.svg',
