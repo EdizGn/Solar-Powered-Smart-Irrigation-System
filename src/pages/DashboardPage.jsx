@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import MoistureCard from '../components/dashboard/MoistureCard'
 import PumpStatusCard from '../components/dashboard/PumpStatusCard'
 import RainStatusCard from '../components/dashboard/RainStatusCard'
@@ -22,7 +22,7 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-        <p className="text-sm text-gray-500">Waiting for real sensor data...</p>
+        <p className="text-sm text-gray-500">Sensör verileri yükleniyor...</p>
       </div>
     )
   }
